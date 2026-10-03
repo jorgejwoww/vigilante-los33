@@ -1,5 +1,7 @@
 """
-Vigilante de mesas para Los 33 (Madrid).
+Vigilante de mesas para restaurantes de Madrid que reservan con CoverManager.
+Por defecto vigila Los 33. Otros restaurantes (p. ej. Charrúa) cambian los ajustes
+desde su propio archivo en .github/workflows/ (ver vigilar-charrua.yml).
 
 Pregunta a la web de reservas (CoverManager) si hay mesa para 2 personas
 a las 22:30 cualquier viernes o sábado de los próximos 2 meses.
@@ -19,15 +21,16 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 # ---- Ajustes (puedes cambiarlos) ----
-RESTAURANTE = "restaurante-los33"
+RESTAURANTE = os.environ.get("RESTAURANTE", "restaurante-los33")
+NOMBRE = os.environ.get("NOMBRE", "Los 33")
 PERSONAS = "2"
-HORAS = ["22:30"]          # p. ej. ["20:00", "22:30"] para vigilar los dos turnos
+HORAS = os.environ.get("HORAS", "22:30").split(",")   # p. ej. "21:30,22:00"
 DIAS = [4, 5]              # 4 = viernes, 5 = sábado
 VIGILAR_HASTA = date(2027, 3, 1)   # después de este día, el vigilante se para solo
 # -------------------------------------
 
 WEB = "https://www.covermanager.com"
-ENLACE = f"{WEB}/reservation/module_restaurant/{RESTAURANTE}/spanish"
+ENLACE = os.environ.get("ENLACE", f"{WEB}/reservation/module_restaurant/{RESTAURANTE}/spanish")
 DIAS_SEMANA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
 
 
@@ -107,7 +110,7 @@ def main():
 
     if libres:
         enviar_whatsapp(
-            "🍽️ ¡MESA LIBRE EN LOS 33! (2 personas)\n"
+            f"🍽️ ¡MESA LIBRE EN {NOMBRE.upper()}! ({PERSONAS} personas)\n"
             + "\n".join(libres)
             + f"\n\nEntra YA: {ENLACE}\nElige la fecha, 2 personas, la hora y pulsa Reservar."
         )
@@ -120,6 +123,6 @@ def main():
 
 if __name__ == "__main__":
     if "--prueba-whatsapp" in sys.argv:
-        enviar_whatsapp("✅ Vigilante de Los 33 conectado. Te avisaré por aquí cuando haya mesa.")
+        enviar_whatsapp(f"✅ Vigilante de {NOMBRE} conectado. Te avisaré por aquí cuando haya mesa.")
     else:
         main()
