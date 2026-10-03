@@ -1,0 +1,38 @@
+name: Vigilar mesa Charrua
+
+# Mismo vigilante que el de Los 33 (usa el mismo programa, los33.py),
+# pero con los ajustes de Charrúa: viernes o sábado, 2 personas,
+# cualquier hora entre las 21:30 y las 22:30.
+# (El "sigo vivo" mensual ya lo hace el vigilante de Los 33 para todo el proyecto.)
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # cada 5 minutos (GitHub a veces se retrasa un poco)
+  workflow_dispatch:         # botón para lanzarlo a mano
+    inputs:
+      prueba_whatsapp:
+        description: "Solo mandar un WhatsApp de prueba"
+        type: boolean
+        default: false
+
+jobs:
+  vigilar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      RESTAURANTE: restaurante-charrua-madrid
+      NOMBRE: Charrúa
+      HORAS: "21:30,21:45,22:00,22:15,22:30"
+      ENLACE: https://www.covermanager.com/reserve/module_restaurant/restaurante-charrua-madrid/spanish
+      WHATSAPP_TELEFONO: ${{ secrets.WHATSAPP_TELEFONO }}
+      CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Mandar WhatsApp de prueba
+        if: ${{ inputs.prueba_whatsapp }}
+        run: python los33.py --prueba-whatsapp
+      - name: Buscar mesa
+        if: ${{ !inputs.prueba_whatsapp }}
+        run: python los33.py
