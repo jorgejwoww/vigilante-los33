@@ -35,12 +35,14 @@ jobs:
           CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
         run: python los33.py
       # GitHub apaga las tareas programadas de un proyecto si pasa 60 días sin cambios.
-      # Una vez al mes (día 1, entre las 4:00 y 4:05 UTC) se guarda una nota para que siga activo.
+      # El día 1 de cada mes, la primera comprobación del día guarda una nota (la fecha)
+      # para que siga activo. Las siguientes de ese día ven que ya está hecha y no hacen nada.
       - name: Sigo vivo (mensual)
         if: ${{ github.event_name == 'schedule' }}
         run: |
-          if [ "$(date -u +%d%H)" = "0104" ] && [ "$(date -u +%M)" -lt 5 ]; then
-            date -u > ultima-vez-activo.txt
+          HOY=$(date -u +%Y-%m-%d)
+          if [ "$(date -u +%d)" = "01" ] && [ "$(cat ultima-vez-activo.txt 2>/dev/null)" != "$HOY" ]; then
+            echo "$HOY" > ultima-vez-activo.txt
             git config user.name "vigilante"
             git config user.email "vigilante@users.noreply.github.com"
             git add ultima-vez-activo.txt
